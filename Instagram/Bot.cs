@@ -93,86 +93,114 @@ namespace IG_Data_Collector.Instagram
 
             Helper.Print_Table_With_TF_Style(_TableLog);
             #endregion
+
+            #region Remove Broken
+            Bots = Bots.Where(x => x.IsUserAuthenticated == true).ToList();
+            #endregion
         }
-        public void Collect_By_Hashtag(string HashtagsList_Path, int count = 100, bool ranked = false, string Save_Path = "./Data/ByHashtag/")
+        public void Collect_By_Hashtag(string HashtagsList_Path, int count = 100, string Save_Path = "./Data/ByHashtag/")
         {
-            string[] input_list = new StreamReader(HashtagsList_Path).ReadToEnd().Split("\r\n");
+            #region Read Hashtag File
             int index = 0;
-            List<List<string>> hashtags = input_list.GroupBy(s => index++ / Bots.Count).Select(g => g.ToList()).ToList();
+            List<List<string>> Hashtags = new StreamReader(HashtagsList_Path).ReadToEnd().Split("\r\n").ToList().Split<string>(Bots.Count);
+            #endregion
 
-            var stopwatch = Stopwatch.StartNew();
+            var spw = Stopwatch.StartNew();
 
-            List<Task<Task>> ddd = new List<Task<Task>>();
+            List<Task<Task>> TasksList = new List<Task<Task>>();
 
-            for (int i = 0; i < Bots.Count; i++)
+            for (; index < Bots.Count; index++)
             {
-                Func<object, Task> selector = async indexer =>
+                TasksList.Add(new Task<Task>(new Func<object, Task>(async BotIndexOBJ =>
                 {
-                    int jj = int.Parse(indexer.ToString());
+                    int BotIndex = int.Parse(BotIndexOBJ.ToString());
 
-                    foreach (var hashtag in hashtags[jj])
+                    #region Collect Hashtag Medias
+                    foreach (var hashtag in Hashtags[BotIndex])
                     {
+                        //Directory for instaMedias
                         string path = Save_Path + hashtag + "_" + DateTime.Now.ToFileTimeUtc();
                         Directory.CreateDirectory(path);
 
-                        List<InstaMedia> medias = new List<InstaMedia>();
-                        var FRes = await Bots[jj].GetTagFeedAsync(hashtag, PaginationParameters.MaxPagesToLoad(1));
-                        medias.AddRange(FRes.Value.Medias);
-                        string nextid = FRes.Value.NextId;
-                        while (medias.Count <= count)
+                        //Get instaMedias
+                        InstaMediaList instaMedias = new InstaMediaList();
+                        var FirstRequestResult = await Bots[BotIndex].GetTagFeedAsync(hashtag, PaginationParameters.MaxPagesToLoad(1));
+                        instaMedias.AddRange(FirstRequestResult.Value.Medias);
+                        string nextid = FirstRequestResult.Value.NextId;
+                        while (instaMedias.Count <= count)
                         {
                             if (nextid != "")
                             {
-                                var res = await Bots[jj].GetTagFeedAsync(hashtag, PaginationParameters.MaxPagesToLoad(1).StartFromId(nextid));
-                                if (res.Succeeded)
-                                    medias.AddRange(res.Value.Medias);
-                                nextid = res.Value.NextId;
+                                var RequestResult = await Bots[BotIndex].GetTagFeedAsync(hashtag, PaginationParameters.MaxPagesToLoad(1).StartFromId(nextid));
+                                if (RequestResult.Succeeded)
+                                    instaMedias.AddRange(RequestResult.Value.Medias);
+                                nextid = RequestResult.Value.NextId;
                             }
                             else
                             {
                                 break;
                             }
                         }
-                        using (StreamWriter sw = new StreamWriter(path + "/" + hashtag + "_RecentMedias.json"))
+
+                        //Save instaMedias
+                        using (StreamWriter sw = new StreamWriter(path + "/" + hashtag + "_instaMedias.json"))
                         {
-                            string jsonstring = JsonConvert.SerializeObject(medias, Formatting.Indented);
+                            string jsonstring = JsonConvert.SerializeObject(instaMedias, Formatting.Indented);
                             await sw.WriteAsync(jsonstring);
                         }
+
+                        //Download Images
+                        Directory.CreateDirectory(path + "/Image");
+                        Directory.CreateDirectory(path + "/Video");
+                        Directory.CreateDirectory(path + "/Carousel");
+
+                        using (WebClient client = new WebClient())
+                        {
+                            foreach (var media in instaMedias)
+                            {
+                                switch (media.MediaType)
+                                {
+                                    case InstaMediaType.Image:
+                                        client.DownloadFile(new Uri(media.Images[0].URI), path + "/Image/" + media.InstaIdentifier + ".jpg");
+                                        break;
+                                    case InstaMediaType.Video:
+                                        client.DownloadFile(new Uri(media.Videos[0].Url), path + "/Video/" + media.InstaIdentifier + ".mp4");
+                                        break;
+                                    case InstaMediaType.Carousel:
+                                        for (int k = 0; k < media.Carousel.Count; k++)
+                                        {
+                                            if (media.Carousel[k].Images.Count > 0)
+                                                client.DownloadFile(new Uri(media.Carousel[k].Images[0].URI), path + "/Carousel/" + media.InstaIdentifier + "_" + k + "_" + ".jpg");
+                                            if (media.Carousel[k].Videos.Count > 0)
+                                                client.DownloadFile(new Uri(media.Carousel[k].Videos[0].Url), path + "/Carousel/" + media.InstaIdentifier + "_" + k + "_" + ".mp4");
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+
+                        Console.WriteLine($" Bot {BotIndex.ToString()} completed Hashtag {hashtag} with index {Hashtags[BotIndex].IndexOf(hashtag)} from {Hashtags[BotIndex].Count}");
                     }
+                    #endregion
 
-                };
-                var jsase = new Task<Task>(selector, i);
-                ddd.Add(jsase);
+                    Console.WriteLine($" Tasks for Bot {BotIndex.ToString()} completed after {spw.Elapsed}");
+                }), index));
             }
 
-            foreach (var d in ddd)
-            {
-                d.Start();
-            }
-            foreach (var d in ddd)
-            {
-                d.Wait();
-            }
-            foreach (var d in ddd)
-            {
-                d.Result.Wait();
-            }
+            TasksList.ForEach(t => t.Start());        //Step A Start
+            TasksList.ForEach(t => t.Wait());         //Step B Wait
+            TasksList.ForEach(t => t.Result.Wait());  //Step C Result
 
-            Console.WriteLine("Done !");
+            Console.WriteLine(" Done !");
 
-            stopwatch.Stop();
+            spw.Stop();
         }
+
         public void Collect_By_Profile(string ProfilesList_Path, int count = 100, string Save_Path = "./Data/ByProfile/")
         {
             #region Read Profile File
             int index = 0;
-            List<List<string>> Profiles = new StreamReader(ProfilesList_Path).ReadToEnd().Split("\r\n").GroupBy(s => index++ / Bots.Count).Select(g => g.ToList()).ToList();
-            if (Profiles.Count() > Bots.Count)
-            {
-                Profiles.Last().ForEach(h => Profiles[Profiles.Count - 2].Add(h));
-                Profiles.RemoveAt(Profiles.Count - 1);
-            }
-            index = 0;
+            List<List<string>> Profiles = new StreamReader(ProfilesList_Path).ReadToEnd().Split("\r\n").ToList().Split<string>(Bots.Count);
             #endregion
 
             var spw = Stopwatch.StartNew();
@@ -249,7 +277,7 @@ namespace IG_Data_Collector.Instagram
                             }
                         }
 
-                        Console.WriteLine($" Bot {BotIndex.ToString()} completed {Profiles[BotIndex].IndexOf(profile)} from {Profiles[BotIndex].Count}");
+                        Console.WriteLine($" Bot {BotIndex.ToString()} completed Profile {profile} with index {Profiles[BotIndex].IndexOf(profile)} from {Profiles[BotIndex].Count}");
                     }
                     #endregion
 

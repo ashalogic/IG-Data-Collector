@@ -1,8 +1,22 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using Console = Colorful.Console;
 
 namespace IG_Data_Collector
 {
+    static class LinqExtensions
+    {
+        public static List<List<T>> Split<T>(this List<T> list, int parts)
+        {
+            int i = 0;
+            var splits = from item in list
+                         group item by i++ % parts into part
+                         select part.ToList();
+            return splits.ToList();
+        }
+    }
+
     public static class Helper
     {
 
