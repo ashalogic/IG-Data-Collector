@@ -231,18 +231,18 @@ namespace IG_Data_Collector.Instagram
                                 switch (media.MediaType)
                                 {
                                     case InstaMediaType.Image:
-                                        client.DownloadFile(new Uri(media.Images[0].URI), path + "/Image" + media.InstaIdentifier + ".jpg");
+                                        client.DownloadFile(new Uri(media.Images[0].URI), path + "/Image/" + media.InstaIdentifier + ".jpg");
                                         break;
                                     case InstaMediaType.Video:
-                                        client.DownloadFile(new Uri(media.Videos[0].Url), path + "/Video" + media.InstaIdentifier + ".mp4");
+                                        client.DownloadFile(new Uri(media.Videos[0].Url), path + "/Video/" + media.InstaIdentifier + ".mp4");
                                         break;
                                     case InstaMediaType.Carousel:
                                         for (int k = 0; k < media.Carousel.Count; k++)
                                         {
                                             if (media.Carousel[k].Images.Count > 0)
-                                                client.DownloadFile(new Uri(media.Carousel[k].Images[0].URI), path + "/Carousel" + media.InstaIdentifier + "_" + k + "_" + ".jpg");
+                                                client.DownloadFile(new Uri(media.Carousel[k].Images[0].URI), path + "/Carousel/" + media.InstaIdentifier + "_" + k + "_" + ".jpg");
                                             if (media.Carousel[k].Videos.Count > 0)
-                                                client.DownloadFile(new Uri(media.Carousel[k].Videos[0].Url), path + "/Carousel" + media.InstaIdentifier + "_" + k + "_" + ".mp4");
+                                                client.DownloadFile(new Uri(media.Carousel[k].Videos[0].Url), path + "/Carousel/" + media.InstaIdentifier + "_" + k + "_" + ".mp4");
                                         }
                                         break;
                                 }
