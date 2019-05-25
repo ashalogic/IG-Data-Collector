@@ -248,6 +248,8 @@ namespace IG_Data_Collector.Instagram
                                 }
                             }
                         }
+
+                        Console.WriteLine($" Bot {BotIndex.ToString()} completed {Profiles[BotIndex].IndexOf(profile)} from {Profiles[BotIndex].Count}");
                     }
                     #endregion
 
