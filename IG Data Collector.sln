@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IG Data Collector", "IG Data Collector.csproj", "{5D6AB998-955F-410D-8D9B-B3400BA4F671}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5D6AB998-955F-410D-8D9B-B3400BA4F671}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D6AB998-955F-410D-8D9B-B3400BA4F671}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D6AB998-955F-410D-8D9B-B3400BA4F671}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D6AB998-955F-410D-8D9B-B3400BA4F671}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29602204-7F33-4F36-86AB-2CD44C45F81A}
+	EndGlobalSection
+EndGlobal
