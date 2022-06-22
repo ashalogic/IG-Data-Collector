@@ -10,7 +10,7 @@
     <PackageReference Include="Colorful.Console" Version="1.2.9" />
     <PackageReference Include="ConsoleTables" Version="2.3.0" />
     <PackageReference Include="InstaSharper" Version="1.4.82" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
